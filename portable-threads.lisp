@@ -72,7 +72,7 @@
 ;;;  03-29-11 Added partial ABCL support (provided by Chun Tian (binghe);
 ;;;           thanks!)
 ;;;  06-24-11 Updates for Digitool MCL & ABCL (from Chun Tian (binghe))
-;;;  10-24-16 Added support for LispWorks 7.0 (Chun Tian (binghe))
+;;;  10-24-16 Added support for LispWorks 7.0 (from Chun Tian (binghe))
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
