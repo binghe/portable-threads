@@ -49,7 +49,7 @@
     :components ((:static-file "COPYING")
                  (:static-file "LICENSE")
                  (:file "portable-threads")
-                 (:file "scheduled-periodic-functions.lisp" :depends-on ("portable-threads"))))
+                 (:file "scheduled-periodic-functions" :depends-on ("portable-threads"))))
 
 ;;; ---------------------------------------------------------------------------
 
