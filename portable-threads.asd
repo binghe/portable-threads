@@ -41,6 +41,7 @@
 ;;; ---------------------------------------------------------------------------
 
 (defsystem :portable-threads
+    :version "2.3"
     :author "The GBBopen Project <gbbopen@GBBopen.org>"
     :maintainer "Dan Corkill <corkill@GBBopen.org> & Chun Tian (binghe) <binghe.lisp@gmail.com>"
     :licence 
