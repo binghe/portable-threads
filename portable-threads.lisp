@@ -71,8 +71,9 @@
 ;;;           scheduled-periodic-functions.lisp file.  (Corkill)
 ;;;  03-29-11 Added partial ABCL support (provided by Chun Tian (binghe);
 ;;;           thanks!)
-;;;  06-24-11 Updates for Digitool MCL & ABCL (from Chun Tian (binghe))
-;;;  10-24-16 Added support for LispWorks 7.0 (from Chun Tian (binghe))
+;;;  06-24-11 Updates for Digitool MCL & ABCL.  (from Chun Tian (binghe))
+;;;  10-24-16 Added support for LispWorks 7.0.  (from Chun Tian (binghe))
+;;;  10-25-16 Fixed loading in CMU Common Lisp 21a.  (Chun Tian (binghe))
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -1522,7 +1523,7 @@
   ;;; Internal release-lock function for CMUCL
   (declare (type mp:lock lock))
   #-i486
-  (setf (mp:lock-process lock) nil)
+  (setf (mp::lock-process lock) nil)
   #+i486
   (null (kernel:%instance-set-conditional
          lock 2 mp:*current-process* nil)))
