@@ -383,7 +383,9 @@
 ;;;    (See http://GBBopen.org/downloads/LICENSE for license details.)
 ;;; ~72,,,'-<-~>~2%"
           (portable-threads-implementation-version)))
-  
+
+;;;  Cancelled this message printing as suggested by Quicklisp (#1213).
+#+ignore
 (eval-when (:load-toplevel)
   (print-portable-threads-herald))
 
