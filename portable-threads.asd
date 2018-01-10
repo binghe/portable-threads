@@ -54,7 +54,7 @@
 
 ;;; ---------------------------------------------------------------------------
 
-(defsystem :portable-threads-test
+(defsystem :portable-threads/test
     :depends-on (:portable-threads)
     :components ((:module
                   "test"
@@ -65,7 +65,7 @@
 
 (defmethod perform ((op test-op)
                     (system (eql (find-system :portable-threads))))
-  (operate 'load-op ':portable-threads-test)
+  (operate 'load-op ':portable-threads/test)
   (funcall (intern (symbol-name '#:portable-threads-tests) 
                    :portable-threads-user))
   (values))
