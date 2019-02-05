@@ -74,6 +74,8 @@
 ;;;  06-24-11 Updates for Digitool MCL & ABCL.  (from Chun Tian (binghe))
 ;;;  10-24-16 Added support for LispWorks 7.0.  (from Chun Tian (binghe))
 ;;;  10-25-16 Fixed loading in CMU Common Lisp 21a.  (Chun Tian (binghe))
+;;;  02-05-19 Use (sb-thread:list-all-threads) instead of sb-thread::*all-threads*
+;;;           in SBCL (provided by Douglas Katzman)
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -471,7 +473,7 @@
   #+lispworks
   (mp:list-all-processes)
   #+(and sbcl sb-thread)
-  sb-thread::*all-threads*
+  (sb-thread:list-all-threads)
   #+scl
   (mp:all-processes)
   #+threads-not-available
@@ -493,7 +495,7 @@
   #+lispworks
   '(mp:list-all-processes)
   #+(and sbcl sb-thread)
-  'sb-thread::*all-threads*
+  '(sb-thread:list-all-threads)
   #+scl
   '(mp:all-processes)
   #+threads-not-available
