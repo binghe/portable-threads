@@ -76,6 +76,7 @@
 ;;;  10-25-16 Fixed loading in CMU Common Lisp 21a.  (Chun Tian (binghe))
 ;;;  02-05-19 Use (sb-thread:list-all-threads) instead of sb-thread::*all-threads*
 ;;;           in SBCL (provided by Douglas Katzman)
+;;;  02-01-20 Added support for LispWorks future versions (8.0 and later).
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -118,6 +119,14 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (when (fboundp 'mp::lock-i-name)
     (pushnew ':new-locks *features*)))
+
+;;; ---------------------------------------------------------------------------
+;;; Add a feature to identify Lispworks 6.0 and later:
+
+#+(and lispworks
+       (not (or lispworks3 lispworks4 lispworks5)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (pushnew ':lispworks6+ *features*))
 
 ;;; ---------------------------------------------------------------------------
 ;;;  Warn if sb-thread support is missing on SBCL/Linux
@@ -197,7 +206,7 @@
    '()
    #+gcl
    '()
-   #+(or lispworks6 lispworks7)
+   #+lispworks6+
    '(system:atomic-decf
      system:atomic-incf 
      system:atomic-pop
@@ -1180,7 +1189,7 @@
   #+(or clozure
         digitool-mcl)
   (%make-lock :ccl-lock (ccl:make-lock name))
-  #+(or lispworks6 lispworks7)
+  #+lispworks6+
   (mp:make-lock :name name :recursivep nil)
   #+(and sbcl sb-thread)
   (sb-thread:make-mutex :name name)
@@ -1209,7 +1218,7 @@
   (mp:make-lock name)
   #+(and ecl threads)
   (mp:make-lock :name name :recursive t)
-  #+(or lispworks6 lispworks7)
+  #+lispworks6+
   (mp:make-lock :name name :recursivep t)
   #+(and new-locks (or lispworks3 lispworks4 lispworks5))
   (%make-recursive-lock :i-name name)
@@ -1288,7 +1297,7 @@
          #+(and ecl threads)
          (mp:with-lock (,lock-sym)
            ,@body)
-         #+(or lispworks6 lispworks7)
+         #+lispworks6+
            (mp:with-lock (,lock-sym ,whostate) 
              ,@body)
          #+(or lispworks3 lispworks4 lispworks5)
@@ -1345,7 +1354,7 @@
     (eq (ccl::lock.value (lock-ccl-lock lock)) ccl:*current-process*)
     #+(and ecl threads)
     (eq (mp:lock-owner lock) mp:*current-process*)
-    #+(or lispworks6 lispworks7)
+    #+lispworks6+
     (mp:lock-owned-by-current-process-p lock)
     #+(or lispworks3 lispworks4 lispworks5)
     (eq (mp:lock-owner lock) mp:*current-process*)
@@ -1379,7 +1388,7 @@
              ccl:*current-process*)
          #+(and ecl threads)
          (eq (mp:lock-owner ,lock-sym) mp:*current-process*)
-         #+(or lispworks6 lispworks7)
+         #+lispworks6+
          (mp:lock-owned-by-current-process-p ,lock-sym)
          #+(or lispworks3 lispworks4 lispworks5)
          (eq (mp:lock-owner ,lock-sym) mp:*current-process*)
@@ -1441,7 +1450,7 @@
 ;;;   implementation)
 
 #-(or (and cmu mp) 
-      (or lispworks6 lispworks7)
+      lispworks6+
       scl)
 (defmacro atomic-push (value place)
   `(as-atomic-operation (push ,value ,place)))
@@ -1460,18 +1469,18 @@
              (cons ,value ,list))))))
 
 #-(or (and cmu mp)
-      (or lispworks6 lispworks7)
+      lispworks6+
       scl)
 (defmacro atomic-pop (place)
   `(as-atomic-operation (pop ,place)))
 
 #-(or (and cmu mp) 
-      (or lispworks6 lispworks7)
+      lispworks6+
       scl)
 (defmacro atomic-incf (place &optional (delta 1))
   `(as-atomic-operation (incf ,place ,delta)))
 
-#+(or lispworks6 lispworks7)
+#+lispworks6+
 (defmacro atomic-incf& (place &optional (delta 1))
   `(system:atomic-fixnum-incf ,place ,delta))
 
@@ -1481,12 +1490,12 @@
                                           (the fixnum ,delta)))))
 
 #-(or (and cmu mp) 
-      (or lispworks6 lispworks7)
+      lispworks6+
       scl)
 (defmacro atomic-decf (place &optional (delta 1))
   `(as-atomic-operation (decf ,place ,delta)))
 
-#+(or lispworks6 lispworks7)
+#+lispworks6+
 (defmacro atomic-decf& (place &optional (delta 1))
   `(system:atomic-fixnum-decf ,place ,delta))
 
@@ -1634,7 +1643,7 @@
            (unwind-protect
                (progn ,@body)
              (mp:get-lock ,lock-sym)))
-         #+(or lispworks6 lispworks7)
+         #+lispworks6+
          (progn
            (mp:process-unlock ,lock-sym 't) ; performs valid-holder check
            (unwind-protect
@@ -1966,12 +1975,12 @@
 
 #-threads-not-available
 (defun throwable-sleep-forever (&optional (tag 'throwable-sleep-forever))
-  (declare #+(or lispworks6 lispworks7) (ignore tag))
+  (declare #+lispworks6+ (ignore tag))
   ;; In most CLs, sleep allows run-in-thread, symbol-value-in-thread,
   ;; and throws to be processed while sleeping, and sleep is often
   ;; well optimized.  So, we use it whenever possible.
   #-(or clozure
-        (or lispworks6 lispworks7))
+        lispworks6+)
   (catch tag (sleep-nearly-forever))
   #+clozure
   (let ((semaphore (ccl:make-semaphore)))
@@ -1979,7 +1988,7 @@
       (push (cons (cons tag ccl:*current-process*) semaphore)
             *sleeper-semaphores*))
     (ccl:wait-on-semaphore semaphore))
-  #+(or lispworks6 lispworks7)
+  #+lispworks6+
   (mp:current-process-pause nearly-forever-seconds))
 
 ;;; ---------------------------------------------------------------------------
@@ -1987,9 +1996,9 @@
 #-threads-not-available
 (defun awaken-throwable-sleeper (thread 
                                  &optional (tag 'throwable-sleep-forever))
-  (declare #+(or lispworks6 lispworks7) (ignore tag))
+  (declare #+lispworks6+ (ignore tag))
   #-(or clozure
-        (or lispworks6 lispworks7))
+        lispworks6+)
   (progn (run-in-thread 
           thread 
           #'(lambda () (ignore-errors (throw tag nil))))
@@ -2002,7 +2011,7 @@
         (setf *sleeper-semaphores*
               (delete acons *sleeper-semaphores* :test #'eq)))
       (ccl:signal-semaphore (cdr acons))))
-  #+(or lispworks6 lispworks7)
+  #+lispworks6+
   (mp:process-poke thread))
 
 ;;; ---------------------------------------------------------------------------
@@ -2087,7 +2096,7 @@
   ((lock :initarg :lock
          :initform (mp:make-lock :name "CV Lock")
          :reader condition-variable-lock)
-   #+(or lispworks6 lispworks7)
+   #+lispworks6+
    (cv :initform (mp:make-condition-variable)
        :reader condition-variable-cv)
    #+(or lispworks3 lispworks4 lispworks5)
@@ -2203,7 +2212,7 @@
       (ccl:process-lock ccl-lock ccl:*current-process*))
     #+(and ecl threads)
     (mp:condition-variable-wait (condition-variable-cv condition-variable) lock)
-    #+(or lispworks6 lispworks7)
+    #+lispworks6+
     (mp:condition-variable-wait (condition-variable-cv condition-variable) lock)
     #+(or lispworks3 lispworks4 lispworks5)
     (progn
@@ -2309,7 +2318,7 @@
     #+(and ecl threads)
     (mp:condition-variable-timedwait
      (condition-variable-cv condition-variable) lock seconds)
-    #+(or lispworks6 lispworks7)
+    #+lispworks6+
     (mp:condition-variable-wait (condition-variable-cv condition-variable) lock 
                                 :timeout seconds)
     #+(or lispworks3 lispworks4 lispworks5)
@@ -2376,7 +2385,7 @@
     (ccl:signal-semaphore (condition-variable-semaphore condition-variable)))
   #+(and ecl threads)
   (mp:condition-variable-signal (condition-variable-cv condition-variable))
-  #+(or lispworks6 lispworks7)
+  #+lispworks6+
   (mp:condition-variable-signal (condition-variable-cv condition-variable))
   #+(and sbcl sb-thread)
   (sb-thread:condition-notify (condition-variable-cv condition-variable))
@@ -2413,7 +2422,7 @@
       (ccl:signal-semaphore semaphore)))
   #+(and ecl threads)
   (mp:condition-variable-broadcast (condition-variable-cv condition-variable))
-  #+(or lispworks6 lispworks7)
+  #+lispworks6+
   (mp:condition-variable-broadcast (condition-variable-cv condition-variable))
   #+(and sbcl sb-thread)
   (sb-thread:condition-broadcast (condition-variable-cv condition-variable))
