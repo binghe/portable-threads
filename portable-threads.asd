@@ -29,14 +29,7 @@
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-(require :asdf)
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (find-package :portable-threads-system)
-    (defpackage :portable-threads-system
-      (:use :common-lisp :asdf))))
-
-(in-package :portable-threads-system)
+(in-package :asdf)
 
 ;;; ---------------------------------------------------------------------------
 
@@ -50,7 +43,8 @@
     :components ((:static-file "COPYING")
                  (:static-file "LICENSE")
                  (:file "portable-threads")
-                 (:file "scheduled-periodic-functions" :depends-on ("portable-threads"))))
+                 (:file "scheduled-periodic-functions" :depends-on ("portable-threads")))
+    :in-order-to ((test-op (test-op :portable-threads/test))))
 
 ;;; ---------------------------------------------------------------------------
 
@@ -59,21 +53,10 @@
     :components ((:module
                   "test"
                   :components
-                  ((:file "portable-threads-test")))))
-
-;;; ---------------------------------------------------------------------------
-
-(defmethod perform ((op test-op)
-                    (system (eql (find-system :portable-threads))))
-  (operate 'load-op ':portable-threads/test)
-  (funcall (intern (symbol-name '#:portable-threads-tests) 
-                   :portable-threads-user))
-  (values))
-
-(defmethod operation-done-p ((op test-op) 
-                             (system (eql (find-system :portable-threads))))
-  nil)
+                  ((:file "portable-threads-test"))))
+    :perform (test-op (o c)
+                      (symbol-call :portable-threads-user :portable-threads-tests)))
 
 ;;; ===========================================================================
-;;;				  End of File
+;;;                                End of File
 ;;; ===========================================================================
